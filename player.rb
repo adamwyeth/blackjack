@@ -21,8 +21,11 @@ class Player
     @chips += @bet
   end
 
-  def win()
-    @chips += @bet * 2
+  def win(blackjack)
+    bet_multiplier = blackjack ? 2.5 : 2
+    chips_won = (@bet * bet_multiplier).to_i
+    @chips += chips_won
+    chips_won
   end
 
   def double()

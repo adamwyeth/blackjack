@@ -119,7 +119,7 @@ private
     end
 
     @players.each do |player|
-      play_hand(player, deck)
+      play_hand(player, player.hand, deck)
     end
 
     puts "Dealer will play now"
@@ -131,13 +131,16 @@ private
     end
   end
 
-  def play_hand(player, deck)
-    commands = ["h", "s", "d"]
+  #hand is seemingly passed redundantly because this method is
+  #called recursively for a split hand
+  def play_hand(player, hand, deck)
+    commands = ["h", "st", "d", "sp"]
     command = ""
-    puts "#{player.name}, your current hand: #{player.hand}"
-    while !player.hand.busted? && command.downcase != "s" && command.downcase != "d"
+    puts "#{player.name}, your current hand: #{hand}"
+    while !hand.split && !hand.busted? && command.downcase != "st" && command.downcase != "d"
       puts "What would you like to do, #{player.name}?"
-      print "You can hit (h), stand (s), and double (d): "
+      
+      print "You can hit (h), stand (st), #{hand.splittable? ? "split (sp)," : ""} and double (d): "
       command = gets.strip
       while !commands.include? command.downcase
         print "That was not a valid command!. Please try again: "
@@ -146,14 +149,27 @@ private
 
       case command.downcase
       when "h"
-        player.hand.add_card(deck.draw())
-        puts "#{player.name} hit and how has: #{player.hand}"
+        hand.add_card(deck.draw())
+        puts "#{player.name} hit and how has: #{hand}"
       when "d"
-        player.hand.add_card(deck.draw())
+        hand.add_card(deck.draw())
         player.double()
-        puts "#{player.name} doubled and now has: #{player.hand}"
-      when "s"
+        puts "#{player.name} doubled and now has: #{hand}"
+      when "st"
         puts "#{player.name} stood."
+      when "sp"
+        if hand.splittable?
+          split_hands = hand.split_hand()
+          split_hands[0].add_card(deck.draw())
+          split_hands[1].add_card(deck.draw())
+          puts "split1: #{split_hands[0]}"
+          puts "split2: #{split_hands[1]}"
+          play_hand(player, split_hands[0], deck)
+          play_hand(player, split_hands[1], deck)
+          player.make_bet(player.bet)
+        else
+          puts "That hand's not splittable."
+        end
       else
         raise "Invalid command selected while playing hand"
       end
@@ -165,19 +181,30 @@ private
   def adjust_chips_after_round()
 
     @players.each do |player|
-      if !player.hand.busted?
-        if @dealer.hand.busted? || player.hand.value > @dealer.hand.value
-          player.win()
-          puts "#{player.name} won #{player.bet * 2} chips!"
-        elsif @dealer.hand.value == player.hand.value
+      chips_won = hand_won(player.hand, player) 
+      puts "#{player.name} won #{chips_won} chips this round."
+    end
+  end
+
+  def hand_won(player_hand, player)
+    if !player_hand.split
+      if !player_hand.busted?
+        if @dealer.hand.busted? || player_hand.value > @dealer.hand.value || (player_hand.value == @dealer.hand.value && player_hand.length < @dealer.hand.length)
+          chips_won = player.win(player.hand.blackjack?)
+          puts "#{player.name} won."
+          return chips_won
+        elsif @dealer.hand.value == player_hand.value
           player.push()
           puts "#{player.name} pushed." 
         else
         puts "#{player.name}'s hand was worth less than the dealer's"
         end
       else
-      puts "#{player.name} busted this round"
+      puts "#{player.name} busted"
       end
+      return 0
+    else
+      return hand_won(player_hand.split_first(), player) + hand_won(player_hand.split_second(), player)
     end
   end
 
