@@ -161,7 +161,7 @@ private
     while !hand.split && !hand.busted? && !hand.doubled && command.downcase != "st"
       puts "What would you like to do, #{player.name}?"
       
-      print "You can hit (h),#{hand.doublable? ? " double (d)," : ""}#{hand.splittable? ? " split (sp)," : ""} and stand (st): "
+      print "You can hit (h),#{hand.doublable? && player.chips >= player.bet ? " double (d)," : ""}#{hand.splittable? && player.chips >= player.bet ? " split (sp)," : ""} and stand (st): "
       command = gets.strip
       while !commands.include? command.downcase
         print "That was not a valid command!. Please try again: "
@@ -173,18 +173,18 @@ private
         hand.add_card(deck.draw())
         puts "#{player.name} hit and how has: #{hand}"
       when "d"
-        if hand.doublable?
+        if hand.doublable? && player.chips >= player.bet
           hand.add_card(deck.draw())
           hand.double_hand()
           player.make_bet(player.bet)
           puts "#{player.name} doubled and now has: #{hand}"
         else
-          puts "That hand can't be doubled."
+          puts "You can't double right now."
         end
       when "st"
         puts "#{player.name} stood."
       when "sp"
-        if hand.splittable?
+        if hand.splittable? && player.chips >= player.bet
           split_hands = hand.split_hand()
           split_hands[0].add_card(deck.draw())
           split_hands[1].add_card(deck.draw())
@@ -194,7 +194,7 @@ private
           play_hand(player, split_hands[1], deck)
           player.make_bet(player.bet)
         else
-          puts "That hand's not splittable."
+          puts "You can't split right now."
         end
       else
         raise "Invalid command selected while playing hand"
