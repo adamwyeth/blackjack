@@ -87,7 +87,7 @@ class Hand
 
   def split_count()
     if !@split && @parent == nil
-      0
+      return 0
     elsif !@split
       return @parent.split_count()
     else

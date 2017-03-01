@@ -25,8 +25,7 @@ class Player
   #Pay out 3:2 on blackjack
   #Pay out double on double
   def win(blackjack, double)
-    bet_multiplier = blackjack ? 2.5 : 2
-    bet_multiplier = double ? 4 : 2
+    bet_multiplier = blackjack ? 2.5 : (double ? 4 : 2)
     chips_won = (@bet * bet_multiplier).to_i
     @chips += chips_won
     chips_won

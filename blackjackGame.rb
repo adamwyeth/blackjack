@@ -189,10 +189,10 @@ private
           split_hands[0].add_card(deck.draw())
           split_hands[1].add_card(deck.draw())
           puts "split 1: #{split_hands[0]}"
-          puts "split 2: #{split_hands[1]}"
+          puts "split 2: #{split_hands[1]}" 
+          player.make_bet(player.bet)
           play_hand(player, split_hands[0], deck)
           play_hand(player, split_hands[1], deck)
-          player.make_bet(player.bet)
         else
           puts "You can't split right now."
         end
