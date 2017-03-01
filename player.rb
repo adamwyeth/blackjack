@@ -1,12 +1,13 @@
 require_relative 'hand.rb'
 
+#Container for player hands and chip counts
 class Player
-  attr_reader :name, :chips, :hand, :bet
+  attr_reader :name, :chips, :bet
+  attr_accessor :hand
 
   def initialize(name, chips)
     @name = name
     @chips = chips
-    @hand = Hand.new()
   end
 
   def make_bet(bet_amt)
@@ -21,16 +22,14 @@ class Player
     @chips += @bet
   end
 
-  def win(blackjack)
+  #Pay out 3:2 on blackjack
+  #Pay out double on double
+  def win(blackjack, double)
     bet_multiplier = blackjack ? 2.5 : 2
+    bet_multiplier = double ? 4 : 2
     chips_won = (@bet * bet_multiplier).to_i
     @chips += chips_won
     chips_won
-  end
-
-  def double()
-    @bet *= 2
-    @chips -= @bet
   end
 
   def to_s

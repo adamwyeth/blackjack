@@ -1,6 +1,11 @@
+#A hand is either a non-split hand, where @cards is an array of cards
+#or a split hand, where @cards contains two split or non-split hands.
+#Ultimately, the "leaves" of this setup will be non-split hands.
+#Most methods of Hand can only be called on a non-split hand
+
 class Hand
 
-  attr_reader :split
+  attr_reader :split, :doubled
   attr_accessor :parent
 
   def initialize()
@@ -9,6 +14,9 @@ class Hand
   end
 
   def add_card(card)
+    if @split
+      raise "Add card not available on split hand"
+    end
     @cards << card
   end
 
@@ -19,6 +27,10 @@ class Hand
 
   #Blackjack value of hand
   def value
+    if @split
+      raise "Value cannot be calculated for split hand, since multiple values exist"
+    end
+
     val = 0
     aces = 0
     @cards.each do |card|
@@ -49,6 +61,10 @@ class Hand
     end
   end 
 
+  def doublable?
+    return @split == false && @cards.length == 2
+  end
+
   def split_hand()
     if @split || @cards.length != 2
       raise "Hand not splittable"
@@ -69,7 +85,6 @@ class Hand
     return split
   end
 
-
   def split_count()
     if !@split && @parent == nil
       0
@@ -78,6 +93,14 @@ class Hand
     else
       return split_count_helper()
     end
+  end
+
+  def double_hand()
+    if @split
+      raise "Can't double split hand"
+    end
+
+    @doubled = true
   end
 
   def to_s

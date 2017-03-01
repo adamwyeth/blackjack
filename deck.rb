@@ -1,5 +1,7 @@
 require_relative 'card.rb'
 
+#Represent a deck of cards.
+#In this case, the cards are blackjack cards
 class Deck
   def initialize()
     @cards = []

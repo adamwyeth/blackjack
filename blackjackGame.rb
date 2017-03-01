@@ -2,7 +2,9 @@ require_relative "dealerHand.rb"
 require_relative "deck.rb"
 require_relative "player.rb"
 require_relative "dealer.rb"
+require_relative "hand.rb"
 
+#Can initialize and run a blackjack game
 class BlackjackGame
 
   def initialize(min_bet)
@@ -29,7 +31,8 @@ private
     while players_left && q_flag.downcase != "q"
       chip_counts()
       enter_bets()
-      
+     
+      init_hands()
       deck = Deck.new()
       deal_round(deck) 
       
@@ -41,25 +44,12 @@ private
 
       clear_losers()
       
-      clear_hands()
       print "q to quit. Anything else to play another round!: "
       q_flag = gets.strip
       putc "\n"
 
     end
   end
-
-  def deal_round(deck)
-
-    #deal two cards
-    for i in 1..2
-      @dealer.hand.add_card(deck.draw())
-      @players.each do |player|
-        player.hand.add_card(deck.draw())
-      end
-    end
-  end
-
 
   def enter_players()
     puts "Welcome to blackjack!"
@@ -94,6 +84,10 @@ private
     return Player.new(player_name, chip_count)
   end
 
+  def chip_counts()
+    puts @players
+  end
+
   def enter_bets()
     @players.each do |player|
       enter_bet(player)
@@ -111,6 +105,33 @@ private
     player.make_bet(bet)
   end
 
+  def init_hands()
+    @dealer.hand = DealerHand.new()
+    @players.each do |player|
+      player.hand = Hand.new()
+    end
+  end
+
+  def deal_round(deck)
+
+    #deal two cards
+    for i in 1..2
+      @dealer.hand.add_card(deck.draw())
+      @players.each do |player|
+        player.hand.add_card(deck.draw())
+      end
+    end
+  end
+
+  def display_hands()
+    puts "Dealer showing: #{@dealer.hand.showing()}\n"
+    puts "Player hands: "
+    @players.each do |player|
+      puts "#{player.name}: #{player.hand}"
+    end
+    putc "\n"
+  end 
+  
   def play_hands(deck)
 
     if @dealer.hand.blackjack?
@@ -137,10 +158,10 @@ private
     commands = ["h", "st", "d", "sp"]
     command = ""
     puts "#{player.name}, your current hand: #{hand}"
-    while !hand.split && !hand.busted? && command.downcase != "st" && command.downcase != "d"
+    while !hand.split && !hand.busted? && !hand.doubled && command.downcase != "st"
       puts "What would you like to do, #{player.name}?"
       
-      print "You can hit (h), stand (st), #{hand.splittable? ? "split (sp)," : ""} and double (d): "
+      print "You can hit (h),#{hand.doublable? ? " double (d)," : ""}#{hand.splittable? ? " split (sp)," : ""} and stand (st): "
       command = gets.strip
       while !commands.include? command.downcase
         print "That was not a valid command!. Please try again: "
@@ -152,9 +173,14 @@ private
         hand.add_card(deck.draw())
         puts "#{player.name} hit and how has: #{hand}"
       when "d"
-        hand.add_card(deck.draw())
-        player.double()
-        puts "#{player.name} doubled and now has: #{hand}"
+        if hand.doublable?
+          hand.add_card(deck.draw())
+          hand.double_hand()
+          player.make_bet(player.bet)
+          puts "#{player.name} doubled and now has: #{hand}"
+        else
+          puts "That hand can't be doubled."
+        end
       when "st"
         puts "#{player.name} stood."
       when "sp"
@@ -162,8 +188,8 @@ private
           split_hands = hand.split_hand()
           split_hands[0].add_card(deck.draw())
           split_hands[1].add_card(deck.draw())
-          puts "split1: #{split_hands[0]}"
-          puts "split2: #{split_hands[1]}"
+          puts "split 1: #{split_hands[0]}"
+          puts "split 2: #{split_hands[1]}"
           play_hand(player, split_hands[0], deck)
           play_hand(player, split_hands[1], deck)
           player.make_bet(player.bet)
@@ -190,7 +216,7 @@ private
     if !player_hand.split
       if !player_hand.busted?
         if @dealer.hand.busted? || player_hand.value > @dealer.hand.value || (player_hand.value == @dealer.hand.value && player_hand.length < @dealer.hand.length)
-          chips_won = player.win(player.hand.blackjack?)
+          chips_won = player.win(player.hand.blackjack?, player.hand.doubled)
           puts "#{player.name} won."
           return chips_won
         elsif @dealer.hand.value == player_hand.value
@@ -218,23 +244,12 @@ private
     end
   end
 
-  def chip_counts()
-    puts @players
-  end
-  
+    
   def player_count
     @players.length
   end
 
-  def display_hands()
-    puts "Dealer showing: #{@dealer.hand.showing()}\n"
-    puts "Player hands: "
-    @players.each do |player|
-      puts "#{player.name}: #{player.hand}"
-    end
-    putc "\n"
-  end
-
+  
   def players_left
     return @players.length > 0
   end

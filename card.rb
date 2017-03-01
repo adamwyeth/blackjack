@@ -1,3 +1,4 @@
+#Card with blackjack value
 class Card
   attr_reader :suit
 

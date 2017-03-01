@@ -1,5 +1,6 @@
 require_relative "hand.rb"
 
+#Adds showing method to hand, which prints all but the first card for the dealer
 class DealerHand < Hand
 
   def showing
